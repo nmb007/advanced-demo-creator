@@ -1,0 +1,21 @@
+targets:
+  local:
+    url: http://localhost:8080
+    auth: admin-local
+  staging:
+    url: https://staging.example.com
+    auth: staging-sso
+    unique_suffix: true
+hooks:
+  before_record: ./scripts/demo-reset.sh
+  after_record: ./scripts/demo-cleanup.sh
+selector_sources:
+  - features
+  - server/theme
+login:
+  url: /login/index.php
+  fields:
+    username: "#username"
+    password: "#password"
+  submit: "#loginbtn"
+env_file: .env.demo

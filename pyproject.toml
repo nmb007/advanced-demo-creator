@@ -1,0 +1,56 @@
+[project]
+name = "demo-creator"
+version = "0.1.0"
+description = "Local AI-narrated demo video creator for any web app (Cursor MCP + skill)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Demo Creator" }]
+dependencies = [
+    "fastmcp>=2.0.0",
+    "playwright>=1.44.0",
+    "pydantic>=2.6.0",
+    "pyyaml>=6.0",
+    "soundfile>=0.12.0",
+    "numpy>=1.26.0",
+    "opencv-python-headless>=4.8.0",
+    "imageio-ffmpeg>=0.5.0",
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+]
+
+[project.optional-dependencies]
+kokoro = [
+    "kokoro>=0.9.0",
+    "torch",
+    "misaki[en]",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[project.scripts]
+demo-creator = "demo_creator.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/demo_creator", "skill", "README.md", "examples", "tests"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"skill" = "demo_creator/skill"
+"src/demo_creator/browser/cursor.js" = "demo_creator/browser/cursor.js"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]

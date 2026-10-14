@@ -1,0 +1,54 @@
+title: Signing in and creating a course
+target: local
+auth: admin-local
+voice:
+  engine: say
+  name: Alex
+  speed: 1.0
+video:
+  width: 1920
+  height: 1080
+  fps: 30
+  scale: 2
+chapters:
+  - title: Signing in
+    scenes:
+      - id: login
+        start_url: /login/index.php
+        narration: >-
+          Let's start by signing in with an administrator account so we can
+          manage courses.
+        pace: spread
+        hold_after: 0.6
+        steps:
+          - action: fill
+            target: { label: Username }
+            value: "${DEMO_USER}"
+          - action: fill
+            target: { label: Password }
+            value: "${DEMO_PASS}"
+            mask: true
+          - action: click
+            target: { role: button, name: Log in }
+            zoom: auto
+          - action: wait_for
+            target: { text: Dashboard }
+  - title: Creating a course
+    scenes:
+      - id: create-course
+        start_url: /course/edit.php?category=1
+        narration: >-
+          From the course form we give the course a name and save it. Using a
+          unique suffix keeps staging data tidy.
+        pace: spread
+        hold_after: 0.8
+        steps:
+          - action: fill
+            target: { label: Course full name }
+            value: "Demo Course ${UNIQUE}"
+          - action: fill
+            target: { label: Course short name }
+            value: "demo-${UNIQUE}"
+          - action: click
+            target: { role: button, name: Save and display }
+            zoom: auto

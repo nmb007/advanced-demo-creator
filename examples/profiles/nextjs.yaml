@@ -1,0 +1,20 @@
+targets:
+  local:
+    url: http://localhost:3000
+    auth: dev-admin
+  staging:
+    url: https://staging.example.com
+    auth: staging-sso
+    unique_suffix: true
+hooks:
+  before_record: npm run demo:reset
+selector_sources:
+  - tests/e2e
+  - cypress/e2e
+login:
+  url: /login
+  fields:
+    username: "#email"
+    password: "#password"
+  submit: "button[type=submit]"
+env_file: .env.demo
