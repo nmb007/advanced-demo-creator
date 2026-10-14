@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Demo Fixture — Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 60px auto; }
+    button { padding: 10px 16px; margin-top: 12px; }
+    #course-form { display: none; margin-top: 24px; }
+    label { display: block; margin-top: 10px; }
+    input { width: 100%; padding: 8px; box-sizing: border-box; }
+    #success { display: none; color: #060; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard</h1>
+  <p>Welcome, admin.</p>
+  <button id="new-course" data-testid="new-course">Create course</button>
+  <div id="course-form">
+    <h2>New course</h2>
+    <label>Course name
+      <input id="course-name" data-testid="course-name" />
+    </label>
+    <button type="button" id="save-course" data-testid="save-course">Save course</button>
+  </div>
+  <p id="success" data-testid="success">Course created successfully.</p>
+  <script>
+    document.getElementById("new-course").onclick = () => {
+      document.getElementById("course-form").style.display = "block";
+    };
+    document.getElementById("save-course").onclick = () => {
+      const name = document.getElementById("course-name").value.trim();
+      if (!name) return;
+      document.getElementById("success").style.display = "block";
+      document.getElementById("success").textContent = `Course "${name}" created successfully.`;
+    };
+  </script>
+</body>
+</html>

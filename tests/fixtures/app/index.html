@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Demo Fixture — Login</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 420px; margin: 80px auto; }
+    label { display: block; margin-top: 12px; }
+    input { width: 100%; padding: 8px; box-sizing: border-box; }
+    button { margin-top: 16px; padding: 10px 16px; }
+    .error { color: #b00; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Sign in</h1>
+  <p class="error" id="error">Invalid credentials</p>
+  <form id="login" action="dashboard.html" method="get">
+    <label>Username
+      <input id="username" name="username" data-testid="username" />
+    </label>
+    <label>Password
+      <input id="password" name="password" type="password" data-testid="password" />
+    </label>
+    <button type="submit" data-testid="login-btn">Log in</button>
+  </form>
+  <script>
+    document.getElementById("login").addEventListener("submit", (e) => {
+      const u = document.getElementById("username").value;
+      const p = document.getElementById("password").value;
+      if (u !== "admin" || p !== "secret") {
+        e.preventDefault();
+        document.getElementById("error").style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>

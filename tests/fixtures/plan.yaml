@@ -1,0 +1,51 @@
+title: Fixture login and create course
+target: http://127.0.0.1:8765
+voice:
+  engine: say
+  name: Alex
+  speed: 1.05
+video:
+  width: 1280
+  height: 720
+  fps: 30
+  scale: 1
+chapters:
+  - title: Signing in
+    scenes:
+      - id: login
+        start_url: /
+        narration: "First we sign in to the demo application with an administrator account."
+        pace: spread
+        hold_after: 0.4
+        steps:
+          - action: fill
+            target: { testid: username }
+            value: admin
+          - action: fill
+            target: { testid: password }
+            value: secret
+            mask: true
+          - action: click
+            target: { testid: login-btn }
+            zoom: auto
+          - action: wait_for
+            target: { text: Dashboard }
+  - title: Creating a course
+    scenes:
+      - id: create-course
+        start_url: /dashboard.html
+        narration: "Next we create a course and save it from the dashboard."
+        pace: spread
+        hold_after: 0.5
+        steps:
+          - action: click
+            target: { testid: new-course }
+            zoom: auto
+          - action: fill
+            target: { testid: course-name }
+            value: "Demo Course ${UNIQUE}"
+          - action: click
+            target: { testid: save-course }
+            zoom: auto
+          - action: wait_for
+            target: { testid: success }
