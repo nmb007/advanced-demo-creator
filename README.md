@@ -203,12 +203,36 @@ demo-creator runs             # list .demo/runs/
 demo-creator serve            # MCP stdio (used by Cursor)
 ```
 
-## Caching and redoing scenes
+## Pipeline steps (order matters)
 
-- Audio cache key: narration text + voice settings.
-- Video cache key: steps + start URL + audio duration + video settings.
-- Edit one scene → only that scene re-renders.
-- Force everything: `render(..., force=True)` or `demo-creator render --force`.
+| Step | MCP tool / CLI | What it does |
+|------|----------------|--------------|
+| Validate | `validate_plan` | Schema check + length estimates; **approve before first full record** |
+| Synthesize | `synthesize` | TTS → per-scene `audio.wav` (cached by narration + voice) |
+| Record | `record` | Playwright screencast + cursor → `scene.mp4` (paced to existing WAV) |
+| QA | `extract_frames` | Sample PNGs under the run for visual checks |
+| Assemble | `assemble` | Join scenes, mux audio, chapter markers → `demos/out/<name>.mp4` |
+| Shortcut | `render` | synthesize + record + assemble in one call |
+
+Always **synthesize before record** when narration text or voice settings change. `record` alone reuses the cached WAV and will still speak the old line even if the YAML narration was updated.
+
+### Caching and redoing scenes
+
+- **Audio cache key:** narration text + voice settings.
+- **Video cache key:** steps + start URL + audio duration + video settings.
+- Edit one scene → re-run only that scene id (`scenes=[id]`), then `assemble`.
+- Keep the same `run_id` under `.demo/runs/` so unchanged scenes stay cached.
+- Prefer an **absolute** `output` path for `assemble` when writing into the project’s `demos/out/`.
+
+| You changed… | Run (in order) |
+|--------------|----------------|
+| **Narration text** (or voice) | `synthesize` (`force`) → `record` (`force`) → `assemble` |
+| Steps / selectors only (same narration) | `record` (`force`) → `assemble` |
+| Whole tour | `render` with `force`, or synthesize/record all scenes then `assemble` |
+
+Force everything: `render(..., force=True)` or `demo-creator render --force`.
+
+**Login pages with saved auth:** if `auth` is set at plan level, logged-in cookies can redirect away from `/login`. Use per-scene `auth: none` (or `""`) for guest/login scenes so they stay on the login screen.
 
 ## Voice
 
@@ -230,6 +254,7 @@ voice: { engine: say, name: Alex, speed: 1.0 }
 | Auth expired | Re-run `save_auth` |
 | Timing drift | Shorten narration or adjust `pace` / `hold_after` |
 | Long demos slow | Rely on scene cache; re-record only changed scene ids |
+| Video still has old narration after YAML edit | Run `synthesize` with `force` for that scene, then `record` + `assemble` — `record` alone does not refresh TTS |
 
 Failed steps leave `error.png` and an accessibility snapshot under `.demo/runs/<id>/scenes/<scene>/`.
 
