@@ -10,9 +10,9 @@ from typing import Any, Callable
 
 from demo_creator.browser.actions import run_step
 from demo_creator.browser.capture import ScreencastCapture
-from demo_creator.browser.session import browser_session
+from demo_creator.browser.session import browser_session, ensure_cursor
 from demo_creator.plan.schema import DemoPlan, Scene
-from demo_creator.recorder.pacing import compute_delays
+from demo_creator.recorder.pacing import step_start_times
 from demo_creator.recorder.timeline import Timeline
 from demo_creator.runs.cache import RunStore, scene_audio_hash, scene_video_hash
 from demo_creator.video.render import render_from_webm, render_scene_video
@@ -63,8 +63,9 @@ async def record_scene(
             "audio_duration": audio_duration,
         }
 
-    target_duration = audio_duration + plan.lead_in_ms / 1000.0 + scene.hold_after
-    delays = compute_delays(scene, audio_duration, lead_in=plan.lead_in_ms / 1000.0)
+    lead_in = plan.lead_in_ms / 1000.0
+    target_duration = audio_duration + lead_in + scene.hold_after
+    start_targets = step_start_times(scene, audio_duration, lead_in=lead_in)
     frames_dir = store.frames_dir(scene.id)
     # Clear old frames
     for old in frames_dir.glob("frame_*.jpg"):
@@ -108,11 +109,16 @@ async def record_scene(
             else:
                 url = base_url.rstrip("/") + "/" + start.lstrip("/")
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+            await ensure_cursor(page)
             await page.wait_for_timeout(int(plan.lead_in_ms))
 
             for i, step in enumerate(scene.steps):
-                if i < len(delays):
-                    await page.wait_for_timeout(int(delays[i] * 1000))
+                # Catch-up pacing: wait until this step's narration slot if ahead.
+                if i < len(start_targets):
+                    elapsed = time.perf_counter() - timeline.t0
+                    wait_s = start_targets[i] - elapsed
+                    if wait_s > 0.01:
+                        await page.wait_for_timeout(int(wait_s * 1000))
                 try:
                     await run_step(
                         page,

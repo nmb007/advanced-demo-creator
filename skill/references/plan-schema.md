@@ -3,7 +3,8 @@
 ```yaml
 title: Signing in and creating a course
 target: local                  # key in .demo/profile.yaml, or full URL
-auth: admin-local              # optional saved session label
+auth: admin-local              # optional plan-level saved session label
+                               # per-scene: auth: none | admin-local (overrides plan/target)
 voice: { engine: kokoro, name: am_michael, speed: 1.0 }
 video: { width: 1920, height: 1080, fps: 30, scale: 2 }
 chapters:

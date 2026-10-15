@@ -15,8 +15,24 @@ def cursor_js_path() -> Path:
     return package_root() / "browser" / "cursor.js"
 
 
+def cursor_js_source() -> str:
+    return cursor_js_path().read_text(encoding="utf-8")
+
+
 def auth_state_path(label: str) -> Path:
     return auth_dir() / f"{label}.json"
+
+
+async def ensure_cursor(page: Page) -> bool:
+    """Inject the demo cursor if missing (SPA navigations can drop init-script state)."""
+    present = await page.evaluate("() => Boolean(window.__demoCreatorCursor)")
+    if present:
+        await page.evaluate(
+            "() => window.__demoCreatorCursor && window.__demoCreatorCursor.getPos()"
+        )
+        return True
+    await page.evaluate(cursor_js_source())
+    return await page.evaluate("() => Boolean(window.__demoCreatorCursor)")
 
 
 @asynccontextmanager
@@ -48,8 +64,7 @@ async def browser_session(
             context_kwargs["record_video_size"] = {"width": width, "height": height}
 
         context = await browser.new_context(**context_kwargs)
-        js = cursor_js_path().read_text(encoding="utf-8")
-        await context.add_init_script(js)
+        await context.add_init_script(cursor_js_source())
         page = await context.new_page()
         try:
             yield browser, context, page

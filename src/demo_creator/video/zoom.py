@@ -26,16 +26,16 @@ def build_camera_track(
     *,
     width: int = 1920,
     height: int = 1080,
-    zoom_in_lead: float = 0.4,
-    hold: float = 0.25,
-    zoom_out: float = 0.35,
+    zoom_in_lead: float = 0.75,
+    hold: float = 0.45,
+    zoom_out: float = 0.65,
     merge_time: float = 2.0,
     merge_dist: float = 300.0,
     max_pan_frac: float = 0.4,
 ) -> list[CameraKeyframe]:
     """
-    Create keyframes: zoom in ~400ms before action, hold, zoom out.
-    Nearby actions merge into one shot.
+    Create keyframes: zoom in before action, hold, zoom out.
+    Nearby actions merge into one shot. Defaults favour a slower camera.
     """
     steps = [s for s in timeline.get("steps", []) if s.get("zoom") and s.get("box")]
     if not steps:

@@ -8,6 +8,7 @@ from typing import Any
 
 from playwright.async_api import Frame, Locator, Page
 
+from demo_creator.browser.session import ensure_cursor
 from demo_creator.plan.schema import Step, Target
 from demo_creator.recorder.timeline import Timeline
 
@@ -58,9 +59,10 @@ async def resolve_locator(page: Page, target: Target) -> Locator:
 
 
 async def cursor_move_to(page: Page, x: float, y: float, ms: int) -> None:
+    await ensure_cursor(page)
     await page.evaluate(
         """async ([x, y, ms]) => {
-          if (!window.__demoCreatorCursor) return;
+          if (!window.__demoCreatorCursor) throw new Error('demo cursor missing');
           await window.__demoCreatorCursor.moveTo(x, y, ms);
         }""",
         [x, y, ms],
@@ -68,18 +70,20 @@ async def cursor_move_to(page: Page, x: float, y: float, ms: int) -> None:
 
 
 async def cursor_press(page: Page) -> None:
+    await ensure_cursor(page)
     await page.evaluate(
         """async () => {
-          if (!window.__demoCreatorCursor) return;
+          if (!window.__demoCreatorCursor) throw new Error('demo cursor missing');
           await window.__demoCreatorCursor.press();
         }"""
     )
 
 
 async def cursor_hover(page: Page) -> None:
+    await ensure_cursor(page)
     await page.evaluate(
         """async () => {
-          if (!window.__demoCreatorCursor) return;
+          if (!window.__demoCreatorCursor) throw new Error('demo cursor missing');
           await window.__demoCreatorCursor.hover();
         }"""
     )
@@ -105,7 +109,9 @@ async def move_cursor_to_locator(page: Page, locator: Locator, timeline: Timelin
     ms = fitts_ms(dist, box.get("width", 32))
     t0 = time.perf_counter()
     await cursor_move_to(page, x, y, ms)
-    await page.mouse.move(x, y)
+    # Avoid Playwright mouse.move — Chromium screencast may paint its own
+    # pointer on top of our post-composited cursor. Real clicks still use
+    # locator.click/fill, which move the input mouse briefly at action time.
     if timeline is not None:
         timeline.add_cursor_path(t0, time.perf_counter(), x, y, box)
     return box
@@ -131,6 +137,7 @@ async def run_step(
             url = base_url.rstrip("/") + "/" + url.lstrip("/")
         await page.goto(url, wait_until="domcontentloaded")
         await page.wait_for_timeout(200)
+        await ensure_cursor(page)
 
     elif action == "wait":
         await page.wait_for_timeout(int(step.ms or 0))

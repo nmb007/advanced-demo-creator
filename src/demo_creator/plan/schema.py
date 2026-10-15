@@ -103,6 +103,8 @@ class Scene(BaseModel):
     steps: list[Step] = Field(default_factory=list)
     pace: PaceMode = "spread"
     hold_after: float = 0.5  # seconds paused after actions / audio
+    # None = inherit plan/target auth; "none"/"" = force logged-out browser
+    auth: str | None = None
 
     @field_validator("id")
     @classmethod

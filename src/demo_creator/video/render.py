@@ -11,6 +11,7 @@ from typing import Any
 import cv2
 import numpy as np
 
+from demo_creator.video.cursor_overlay import overlay_cursor
 from demo_creator.video.zoom import build_camera_track, sample_camera
 
 
@@ -145,6 +146,20 @@ def render_scene_video(
             )
             if framed.shape[0] != height or framed.shape[1] != width:
                 framed = cv2.resize(framed, (width, height))
+            # Single visible cursor: composited here. In-page pointer is hidden
+            # (cursor:none + no DOM glyph) so screencast does not add a second one.
+            framed = overlay_cursor(
+                framed,
+                timeline,
+                t,
+                cam_cx=cx,
+                cam_cy=cy,
+                zoom=zoom,
+                out_w=width,
+                out_h=height,
+                css_w=css_w,
+                css_h=css_h,
+            )
             proc.stdin.write(framed.tobytes())
     finally:
         proc.stdin.close()

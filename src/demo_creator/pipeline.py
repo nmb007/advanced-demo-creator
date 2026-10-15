@@ -24,6 +24,16 @@ from demo_creator.video.frames import extract_frames
 ProgressCb = Callable[[str, dict], None]
 
 
+def resolve_scene_auth(scene_auth: str | None, default_auth: str | None) -> str | None:
+    """Resolve per-scene auth. ``none``/empty overrides inherited plan/target auth."""
+    if scene_auth is not None:
+        label = scene_auth.strip().lower()
+        if label in ("", "none", "null", "false"):
+            return None
+        return scene_auth.strip()
+    return default_auth
+
+
 def _resolve_context(plan_path: Path, project_root: Path | None = None):
     root = project_root or find_project_root(plan_path.parent)
     profile = load_profile(root)
@@ -100,7 +110,7 @@ async def record_plan(
     force: bool = False,
     on_progress: ProgressCb | None = None,
 ) -> dict[str, Any]:
-    root, profile, plan, base_url, auth = _resolve_context(plan_path, project_root)
+    root, profile, plan, base_url, default_auth = _resolve_context(plan_path, project_root)
     if run_id:
         store = RunStore.open(root, run_id)
     else:
@@ -119,7 +129,7 @@ async def record_plan(
                 scene,
                 store=store,
                 base_url=base_url,
-                auth_label=auth,
+                auth_label=resolve_scene_auth(scene.auth, default_auth),
                 headless=headless,
                 force=force,
                 on_progress=on_progress,
